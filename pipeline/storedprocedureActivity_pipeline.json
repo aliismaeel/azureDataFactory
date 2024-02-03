@@ -1,0 +1,48 @@
+{
+	"name": "storedprocedureActivity_pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Insert orders Stored procedure",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[InsertOrders]",
+					"storedProcedureParameters": {
+						"CustomerID": {
+							"value": "5",
+							"type": "Int32"
+						},
+						"OrderDate": {
+							"value": "2024-01-22",
+							"type": "DateTime"
+						},
+						"OrderID": {
+							"value": "105",
+							"type": "Int32"
+						},
+						"TotalAmount": {
+							"value": "100.35",
+							"type": "Decimal"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureSqlDatabase_lookupActivity",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2024-01-23T13:20:14Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,57 @@
+{
+	"name": "FilterEmployee_DataFlow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "empData_ForDataFlow",
+						"type": "DatasetReference"
+					},
+					"name": "EmpData"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "outPut_DataSet",
+						"type": "DatasetReference"
+					},
+					"name": "Finance"
+				}
+			],
+			"transformations": [
+				{
+					"name": "FilterEmpData"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          EmpId as string,",
+				"          EmpName as string,",
+				"          Gender as string,",
+				"          Contact as string,",
+				"          Education as string,",
+				"          DepartmentId as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     enableCdc: true,",
+				"     mode: 'read',",
+				"     skipInitialLoad: true,",
+				"     partitionBy('hash', 1)) ~> EmpData",
+				"EmpData filter(equals(DepartmentId, '2'),",
+				"     partitionBy('hash', 1)) ~> FilterEmpData",
+				"FilterEmpData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['finance.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1,",
+				"     partitionBy('hash', 1)) ~> Finance"
+			]
+		}
+	}
+}

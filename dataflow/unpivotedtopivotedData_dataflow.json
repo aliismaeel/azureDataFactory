@@ -1,0 +1,56 @@
+{
+	"name": "unpivotedtopivotedData_dataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "unpivotedData_Dataset",
+						"type": "DatasetReference"
+					},
+					"name": "unpivotedData"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "outPut_DataSet",
+						"type": "DatasetReference"
+					},
+					"name": "pivotedData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "unpivot1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          PO as string,",
+				"          Vendor as string,",
+				"          Apple as string,",
+				"          Mango as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> unpivotedData",
+				"unpivotedData unpivot(output(",
+				"          Fruits as string,",
+				"          Amount as string",
+				"     ),",
+				"     ungroupBy(PO,",
+				"          Vendor),",
+				"     lateral: true,",
+				"     ignoreNullPivots: false) ~> unpivot1",
+				"unpivot1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['unpivotedtopivotedData.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> pivotedData"
+			]
+		}
+	}
+}

@@ -1,0 +1,12 @@
+{
+	"name": "linkedservice_AzureSqlDatabase_lookupActivity",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "integrated security=False;encrypt=True;connection timeout=30;data source=aliserver.database.windows.net;initial catalog=demodatabase;user id=aliserver",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQERBQUE3NzlDLUMzN0UtNDM2Ri1BMUM2LUU1RDZFNUVGOTRENV83Nzc3YWE1OC1kZWViLTRjNTUtYWQzZi00OTE5MGY1YzNhZWQiDQp9"
+		}
+	}
+}

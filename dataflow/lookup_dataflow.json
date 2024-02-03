@@ -1,0 +1,74 @@
+{
+	"name": "lookup_dataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "empdataForDerived_DataSet",
+						"type": "DatasetReference"
+					},
+					"name": "employees"
+				},
+				{
+					"dataset": {
+						"referenceName": "departmentData_ForDataFlow",
+						"type": "DatasetReference"
+					},
+					"name": "departments"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "outPut_DataSet",
+						"type": "DatasetReference"
+					},
+					"name": "lookupDestination"
+				}
+			],
+			"transformations": [
+				{
+					"name": "lookup1"
+				},
+				{
+					"name": "NameSorting"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          EmpId as string,",
+				"          EmpName as string,",
+				"          Gender as string,",
+				"          Contact as string,",
+				"          Education as string,",
+				"          DepartmentId as string,",
+				"          Country as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> employees",
+				"source(output(",
+				"          DepartmentId as string,",
+				"          DepartmentName as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> departments",
+				"employees, departments lookup(employees@DepartmentId == departments@DepartmentId,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup1",
+				"lookup1 sort(asc(EmpName, true),",
+				"     caseInsensitive: true) ~> NameSorting",
+				"NameSorting sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['lookupResult.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> lookupDestination"
+			]
+		}
+	}
+}

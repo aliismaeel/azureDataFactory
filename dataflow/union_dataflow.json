@@ -1,0 +1,87 @@
+{
+	"name": "union_dataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "auditDepartment_dataset",
+						"type": "DatasetReference"
+					},
+					"name": "AuditDepartmentEmployees"
+				},
+				{
+					"dataset": {
+						"referenceName": "FinanceDepartment_dataset",
+						"type": "DatasetReference"
+					},
+					"name": "FinanceDepartmentEmployees"
+				},
+				{
+					"dataset": {
+						"referenceName": "MarketingDepartment_dataset",
+						"type": "DatasetReference"
+					},
+					"name": "MarketingDepartmentEmployees"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "outPut_DataSet",
+						"type": "DatasetReference"
+					},
+					"name": "AllDepartmentsEmployeesData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AllDepartmentEmployees"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          EmpId as string,",
+				"          EmpName as string,",
+				"          Gender as string,",
+				"          Contact as string,",
+				"          Education as string,",
+				"          DepartmentId as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> AuditDepartmentEmployees",
+				"source(output(",
+				"          EmpId as string,",
+				"          EmpName as string,",
+				"          Gender as string,",
+				"          Contact as string,",
+				"          Education as string,",
+				"          DepartmentId as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> FinanceDepartmentEmployees",
+				"source(output(",
+				"          EmpId as string,",
+				"          EmpName as string,",
+				"          Gender as string,",
+				"          Contact as string,",
+				"          Education as string,",
+				"          DepartmentId as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> MarketingDepartmentEmployees",
+				"AuditDepartmentEmployees, FinanceDepartmentEmployees, MarketingDepartmentEmployees union(byName: true)~> AllDepartmentEmployees",
+				"AllDepartmentEmployees sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['alldepartmentEmployees.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> AllDepartmentsEmployeesData"
+			]
+		}
+	}
+}

@@ -1,0 +1,48 @@
+{
+	"name": "pipeline2",
+	"properties": {
+		"activities": [
+			{
+				"name": "Delete1",
+				"type": "Delete",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "deleteCsvFiles",
+						"value": "all csv files are deleted"
+					}
+				],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "dataSet_forDeleteActivity",
+						"type": "DatasetReference"
+					},
+					"logStorageSettings": {
+						"linkedServiceName": {
+							"referenceName": "linkedservice_AzureBlobStorage",
+							"type": "LinkedServiceReference"
+						},
+						"path": "adfdemo/output"
+					},
+					"enableLogging": true,
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"wildcardFileName": "*.csv",
+						"enablePartitionDiscovery": false
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2024-01-17T13:06:56Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

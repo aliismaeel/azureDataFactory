@@ -1,0 +1,81 @@
+{
+	"name": "ConditionalDataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "empData_ForDataFlow",
+						"type": "DatasetReference"
+					},
+					"name": "Employees"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "outPut_DataSet",
+						"type": "DatasetReference"
+					},
+					"name": "AuditDepartmentEmployees"
+				},
+				{
+					"dataset": {
+						"referenceName": "outPut_DataSet",
+						"type": "DatasetReference"
+					},
+					"name": "FinanceDepartmentEmployees"
+				},
+				{
+					"dataset": {
+						"referenceName": "outPut_DataSet",
+						"type": "DatasetReference"
+					},
+					"name": "MarketingDepartmentEmployees"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DepartmentBasedFiles"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          EmpId as string,",
+				"          EmpName as string,",
+				"          Gender as string,",
+				"          Contact as string,",
+				"          Education as string,",
+				"          DepartmentId as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> Employees",
+				"Employees split(equals(DepartmentId, '1'),",
+				"     equals(DepartmentId, '2'),",
+				"     equals(DepartmentId, '3'),",
+				"     disjoint: false,",
+				"     partitionBy('hash', 1)) ~> DepartmentBasedFiles@(AuditDepartment, FinanceDepartment, MarketingDepartment, OtherDepartments)",
+				"DepartmentBasedFiles@AuditDepartment sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['AuditDepartmentEmployees.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> AuditDepartmentEmployees",
+				"DepartmentBasedFiles@FinanceDepartment sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['FinanceDepartmentEmployees.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> FinanceDepartmentEmployees",
+				"DepartmentBasedFiles@MarketingDepartment sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['MarketingDepartmentEmployees.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> MarketingDepartmentEmployees"
+			]
+		}
+	}
+}

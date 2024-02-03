@@ -1,0 +1,24 @@
+{
+	"name": "triggerforcopydatapipeline",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "copydata_pipeline",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 1,
+				"startTime": "2024-01-12T01:19:00",
+				"timeZone": "Pakistan Standard Time"
+			}
+		}
+	}
+}

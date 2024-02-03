@@ -1,0 +1,9 @@
+{
+	"name": "datafactorydemoali",
+	"location": "uaenorth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "3b6aff95-c9c9-4265-8526-7c5400552872",
+		"tenantId": "63589ddc-01a2-4ad6-8a0f-1d0eb7b878c6"
+	}
+}

@@ -1,0 +1,37 @@
+{
+	"name": "FilterEmployeeDataFlow_pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "FilterEmpData",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "FilterEmployee_DataFlow",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine",
+					"continuationSettings": {
+						"customizedCheckpointKey": "f8a424e8-b773-4c65-986c-d3ac731f921d"
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2024-01-25T12:30:56Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
