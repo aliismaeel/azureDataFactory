@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "datafactorydemoali"
+		},
+		"linkedservice_AzureBlobStorage_connectionString": {
+			"value": ""
+		},
+		"linkedservice_AzureBlobStorage_lookupActivity_connectionString": {
+			"value": ""
+		},
+		"linkedservice_AzureSqlDatabase_lookupActivity_connectionString": {
+			"value": ""
+		},
+		"linkedservice_dbparameterization_connectionString": {
+			"value": ""
+		},
+		"linkedservice_general_parametrization_connectionString": {
+			"value": "Integrated Security=False;Data Source=@{linkedService().serverName};Initial Catalog=@{linkedService().dbName};User ID=@{linkedService().userName};Password=@{linkedService().password}"
+		}
+	}
+}

@@ -1,0 +1,4139 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "datafactorydemoali"
+		},
+		"linkedservice_AzureBlobStorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedservice_AzureBlobStorage'"
+		},
+		"linkedservice_AzureBlobStorage_lookupActivity_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedservice_AzureBlobStorage_lookupActivity'"
+		},
+		"linkedservice_AzureSqlDatabase_lookupActivity_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedservice_AzureSqlDatabase_lookupActivity'"
+		},
+		"linkedservice_dbparameterization_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedservice_dbparameterization'"
+		},
+		"linkedservice_general_parametrization_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedservice_general_parametrization'",
+			"defaultValue": "Integrated Security=False;Data Source=@{linkedService().serverName};Initial Catalog=@{linkedService().dbName};User ID=@{linkedService().userName};Password=@{linkedService().password}"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AggregationDataFlow_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Aggregation Data flow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Aggregation",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Employees": {},
+									"Departments": {},
+									"CountEmployeesinDepartment": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-25T14:23:11Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Aggregation')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AllDepartmentEmployees_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "All Departments Data flow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "union_dataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"AuditDepartmentEmployees": {},
+									"FinanceDepartmentEmployees": {},
+									"MarketingDepartmentEmployees": {},
+									"AllDepartmentsEmployeesData": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-27T03:55:09Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/union_dataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DepartmentsExist_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Departments exists Data flow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "existnotexist_dataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Employees": {},
+									"Departments": {},
+									"DepartmetIdNotExist": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-25T18:37:56Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/existnotexist_dataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DepartmentsNotExists_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "NotExist Data flow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "existnotexist_dataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Employees": {},
+									"Departments": {},
+									"DepartmetIdNotExist": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-25T18:49:12Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/existnotexist_dataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/EmpDepData_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "EmpDepData",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "EmpDepData",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"EmployeeData": {},
+									"DepartmentData": {},
+									"sink": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "f4a4246d-d3ba-4294-ae45-fae985e9be0a"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-25T13:14:11Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/EmpDepData')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/FilterEmployeeDataFlow_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "FilterEmpData",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "FilterEmployee_DataFlow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"EmpData": {},
+									"Finance": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine",
+							"continuationSettings": {
+								"customizedCheckpointKey": "f8a424e8-b773-4c65-986c-d3ac731f921d"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-25T12:30:56Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/FilterEmployee_DataFlow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GetMetadataActivity_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "employeeData_sourceDataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"lastModified"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "If Condition1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(formatDateTime(utcnow(), 'yyyy-MM-dd'), formatDateTime(activity('Get Metadata').output.lastModified, 'yyyy-MM-dd'))",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-19T10:37:42Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/employeeData_sourceDataset')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/conditionalDataflow_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Conditional Data flow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "ConditionalDataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Employees": {},
+									"AuditDepartmentEmployees": {},
+									"FinanceDepartmentEmployees": {},
+									"MarketingDepartmentEmployees": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-25T17:19:50Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/ConditionalDataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/copydata_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_Data",
+						"description": "copy data from input folder to output folder.",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "inputdataDataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "outputdataDataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-11T18:03:46Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/inputdataDataset')]",
+				"[concat(variables('factoryId'), '/datasets/outputdataDataset')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/derivedcolumn_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DerivedColumn Data flow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DerivedColumnDataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Employees": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-25T18:24:56Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DerivedColumnDataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/forgithubDemo_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "unpivotedData_Dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/unpivotedData_Dataset')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ifConditionActivity_Pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "If Condition1",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@bool(pipeline().parameters.copytofolder1)",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Copy data2",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "AzureBlobStorageReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "employeeData_sourceDataset",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DataSet_Formultiple_destinations",
+											"type": "DatasetReference",
+											"parameters": {
+												"DirectoryPath": {
+													"value": "@pipeline().parameters.outputFolder2",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Copy data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "AzureBlobStorageReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "employeeData_sourceDataset",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DataSet_Formultiple_destinations",
+											"type": "DatasetReference",
+											"parameters": {
+												"DirectoryPath": {
+													"value": "@pipeline().parameters.outPutFolder1",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"copytofolder1": {
+						"type": "string",
+						"defaultValue": "true"
+					},
+					"outPutFolder1": {
+						"type": "string",
+						"defaultValue": "output1"
+					},
+					"outputFolder2": {
+						"type": "string",
+						"defaultValue": "output2"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-19T10:37:42Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/employeeData_sourceDataset')]",
+				"[concat(variables('factoryId'), '/datasets/DataSet_Formultiple_destinations')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/lookupActivity_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup Activity",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT \n*\nFROM \n demodatabase.INFORMATION_SCHEMA.TABLES \n WHERE table_type ='BASE TABLE'",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AzureSql_lookupActivity",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup Activity",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup Activity').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Copy data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "AzureSql_lookupActivity_copyData",
+											"type": "DatasetReference",
+											"parameters": {
+												"schemaName": {
+													"value": "@item().table_schema",
+													"type": "Expression"
+												},
+												"tableName": {
+													"value": "@item().table_name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "blobStorage_lookupActivity",
+											"type": "DatasetReference",
+											"parameters": {
+												"fileName": {
+													"value": "@concat(item().table_schema,'_',item().table_name,'.csv')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-23T09:29:18Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AzureSql_lookupActivity')]",
+				"[concat(variables('factoryId'), '/datasets/AzureSql_lookupActivity_copyData')]",
+				"[concat(variables('factoryId'), '/datasets/blobStorage_lookupActivity')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/lookupDataflow_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "lookup-Data flow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "lookup_dataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"employees": {},
+									"departments": {},
+									"lookupDestination": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-29T18:35:41Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/lookup_dataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "Source",
+								"value": "adfdemo/input/employeeData.csv"
+							},
+							{
+								"name": "Destination",
+								"value": "adfdemo/output/"
+							}
+						],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "Name",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Name",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "Gender",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Gender",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "Education",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Education",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "Contact",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Contact",
+											"type": "String",
+											"physicalType": "String"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "employeeData_sourceDataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "employeeData_sinkDataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-17T10:53:04Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/employeeData_sourceDataset')]",
+				"[concat(variables('factoryId'), '/datasets/employeeData_sinkDataset')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Delete1",
+						"type": "Delete",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "deleteCsvFiles",
+								"value": "all csv files are deleted"
+							}
+						],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "dataSet_forDeleteActivity",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"logStorageSettings": {
+								"linkedServiceName": {
+									"referenceName": "linkedservice_AzureBlobStorage",
+									"type": "LinkedServiceReference"
+								},
+								"path": "adfdemo/output"
+							},
+							"enableLogging": true,
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"wildcardFileName": "*.csv",
+								"enablePartitionDiscovery": false
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-17T13:06:56Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/dataSet_forDeleteActivity')]",
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline3')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "master Pipeline",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pipeline1",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-18T18:09:15Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeline1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline4')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.FolderName",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "AzureBlobStorageReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "employeeData_sourceDataset",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DataSet_Formultiple_destinations",
+											"type": "DatasetReference",
+											"parameters": {
+												"DirectoryPath": {
+													"value": "@item()",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"FolderName": {
+						"type": "array"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-18T18:17:33Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/employeeData_sourceDataset')]",
+				"[concat(variables('factoryId'), '/datasets/DataSet_Formultiple_destinations')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pivotedData_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Pivoted Data flow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "pivot_dataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Employees": {},
+									"pivotedDataOnEducation": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-29T19:42:49Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/pivot_dataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_extract_zip')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*.csv",
+									"deleteFilesAfterCompletion": false
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "sourceDataSet",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "SinkDataSet",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-24T07:08:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/sourceDataSet')]",
+				"[concat(variables('factoryId'), '/datasets/SinkDataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/removeduplicationRows_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "duplicaterowremove_dataflow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "duplicaterowremove_dataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Employees": {},
+									"DuplicationRowsRemoved": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-02-01T17:13:24Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/duplicaterowremove_dataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/storedprocedureActivity_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Insert orders Stored procedure",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[InsertOrders]",
+							"storedProcedureParameters": {
+								"CustomerID": {
+									"value": "5",
+									"type": "Int32"
+								},
+								"OrderDate": {
+									"value": "2024-01-22",
+									"type": "DateTime"
+								},
+								"OrderID": {
+									"value": "105",
+									"type": "Int32"
+								},
+								"TotalAmount": {
+									"value": "100.35",
+									"type": "Decimal"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "linkedservice_AzureSqlDatabase_lookupActivity",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-23T13:20:14Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureSqlDatabase_lookupActivity')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/switchactivity_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Switch1",
+						"type": "Switch",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"on": {
+								"value": "@pipeline().parameters.DirectoryPath",
+								"type": "Expression"
+							},
+							"cases": [
+								{
+									"value": "output1",
+									"activities": [
+										{
+											"name": "Copy data1",
+											"type": "Copy",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "DelimitedTextSource",
+													"storeSettings": {
+														"type": "AzureBlobStorageReadSettings",
+														"recursive": true,
+														"enablePartitionDiscovery": false
+													},
+													"formatSettings": {
+														"type": "DelimitedTextReadSettings"
+													}
+												},
+												"sink": {
+													"type": "DelimitedTextSink",
+													"storeSettings": {
+														"type": "AzureBlobStorageWriteSettings"
+													},
+													"formatSettings": {
+														"type": "DelimitedTextWriteSettings",
+														"quoteAllText": true,
+														"fileExtension": ".txt"
+													}
+												},
+												"enableStaging": false,
+												"translator": {
+													"type": "TabularTranslator",
+													"typeConversion": true,
+													"typeConversionSettings": {
+														"allowDataTruncation": true,
+														"treatBooleanAsNumber": false
+													}
+												}
+											},
+											"inputs": [
+												{
+													"referenceName": "employeeDetails_sourceDataset",
+													"type": "DatasetReference",
+													"parameters": {}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "DataSet_Formultiple_destinations",
+													"type": "DatasetReference",
+													"parameters": {
+														"DirectoryPath": {
+															"value": "@pipeline().parameters.DirectoryPath",
+															"type": "Expression"
+														}
+													}
+												}
+											]
+										}
+									]
+								},
+								{
+									"value": "output2",
+									"activities": [
+										{
+											"name": "Copy data2",
+											"type": "Copy",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "DelimitedTextSource",
+													"storeSettings": {
+														"type": "AzureBlobStorageReadSettings",
+														"recursive": true,
+														"enablePartitionDiscovery": false
+													},
+													"formatSettings": {
+														"type": "DelimitedTextReadSettings"
+													}
+												},
+												"sink": {
+													"type": "DelimitedTextSink",
+													"storeSettings": {
+														"type": "AzureBlobStorageWriteSettings"
+													},
+													"formatSettings": {
+														"type": "DelimitedTextWriteSettings",
+														"quoteAllText": true,
+														"fileExtension": ".txt"
+													}
+												},
+												"enableStaging": false,
+												"translator": {
+													"type": "TabularTranslator",
+													"typeConversion": true,
+													"typeConversionSettings": {
+														"allowDataTruncation": true,
+														"treatBooleanAsNumber": false
+													}
+												}
+											},
+											"inputs": [
+												{
+													"referenceName": "employeeDetails_sourceDataset",
+													"type": "DatasetReference",
+													"parameters": {}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "DataSet_Formultiple_destinations",
+													"type": "DatasetReference",
+													"parameters": {
+														"DirectoryPath": {
+															"value": "@pipeline().parameters.DirectoryPath",
+															"type": "Expression"
+														}
+													}
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DirectoryPath": {
+						"type": "string",
+						"defaultValue": "output3"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-20T13:28:40Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/employeeDetails_sourceDataset')]",
+				"[concat(variables('factoryId'), '/datasets/DataSet_Formultiple_destinations')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/task1_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata1').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Copy data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "AzureBlobStorageReadSettings",
+												"recursive": true,
+												"wildcardFileName": "*.csv",
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "allfiles_sourceDataSet",
+											"type": "DatasetReference",
+											"parameters": {
+												"fileName": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "allfiles_sinkDataSet",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "inputDataSet_forGetMetaData",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"animalArray": {
+						"type": "Array",
+						"defaultValue": [
+							"dog",
+							"cat",
+							"parrot"
+						]
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-22T12:47:26Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/inputDataSet_forGetMetaData')]",
+				"[concat(variables('factoryId'), '/datasets/allfiles_sourceDataSet')]",
+				"[concat(variables('factoryId'), '/datasets/allfiles_sinkDataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/unpivotedTopivotedData_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "unpivoted to pivoted Data flow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "unpivotedtopivotedData_dataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"unpivotedData": {},
+									"pivotedData": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-02-02T18:22:15Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/unpivotedtopivotedData_dataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/until_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Until1",
+						"type": "Until",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@bool(pipeline().parameters.fileAvailable)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Get Metadata1",
+									"type": "GetMetadata",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataset": {
+											"referenceName": "employeeData_sourceDataset",
+											"type": "DatasetReference",
+											"parameters": {}
+										},
+										"fieldList": [
+											"exists"
+										],
+										"storeSettings": {
+											"type": "AzureBlobStorageReadSettings",
+											"recursive": true,
+											"enablePartitionDiscovery": false
+										},
+										"formatSettings": {
+											"type": "DelimitedTextReadSettings"
+										}
+									}
+								},
+								{
+									"name": "If Condition1",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "Get Metadata1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@bool(activity('Get Metadata1').output.exists)",
+											"type": "Expression"
+										},
+										"ifFalseActivities": [
+											{
+												"name": "Wait1",
+												"type": "Wait",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"waitTimeInSeconds": 120
+												}
+											}
+										],
+										"ifTrueActivities": [
+											{
+												"name": "Copy data1",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "DelimitedTextSource",
+														"storeSettings": {
+															"type": "AzureBlobStorageReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "DelimitedTextReadSettings"
+														}
+													},
+													"sink": {
+														"type": "DelimitedTextSink",
+														"storeSettings": {
+															"type": "AzureBlobStorageWriteSettings"
+														},
+														"formatSettings": {
+															"type": "DelimitedTextWriteSettings",
+															"quoteAllText": true,
+															"fileExtension": ".txt"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "employeeData_sourceDataset",
+														"type": "DatasetReference",
+														"parameters": {}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "DataSet_Formultiple_destinations",
+														"type": "DatasetReference",
+														"parameters": {
+															"DirectoryPath": "output4"
+														}
+													}
+												]
+											}
+										]
+									}
+								},
+								{
+									"name": "Set variable1",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "If Condition1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "fileAvailable",
+										"value": "true"
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"fileAvailable": {
+						"type": "string",
+						"defaultValue": "false"
+					}
+				},
+				"variables": {
+					"fileAvailable": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-19T12:20:13Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/employeeData_sourceDataset')]",
+				"[concat(variables('factoryId'), '/datasets/DataSet_Formultiple_destinations')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/webactivity_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "WebActivity",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {
+								"Content-type": "application/json"
+							},
+							"url": "https://dummy.restapiexample.com/api/v1/create",
+							"body": {
+								"name": "test",
+								"salary": "123",
+								"age": "23"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-20T17:55:47Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSql_lookupActivity')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureSqlDatabase_lookupActivity",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureSqlDatabase_lookupActivity')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSql_lookupActivity_copyData')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureSqlDatabase_lookupActivity",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"schemaName": {
+						"type": "string"
+					},
+					"tableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().schemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureSqlDatabase_lookupActivity')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DataSet_Formultiple_destinations')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"DirectoryPath": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": {
+							"value": "@dataset().DirectoryPath",
+							"type": "Expression"
+						},
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Name",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/FinanceDepartment_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "FinanceDepartmentEmployees.csv",
+						"folderPath": "output",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmpId",
+						"type": "String"
+					},
+					{
+						"name": "EmpName",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					},
+					{
+						"name": "DepartmentId",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ForderivedColumn_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "employeeDataforDerived.csv",
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmpId",
+						"type": "String"
+					},
+					{
+						"name": "EmpName",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					},
+					{
+						"name": "DepartmentId",
+						"type": "String"
+					},
+					{
+						"name": "Country",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MarketingDepartment_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "MarketingDepartmentEmployees.csv",
+						"folderPath": "output",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmpId",
+						"type": "String"
+					},
+					{
+						"name": "EmpName",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					},
+					{
+						"name": "DepartmentId",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SinkDataSet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "output/testzip",
+						"container": "adfdemo"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/allfiles_sinkDataSet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "output",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Name",
+						"type": "String"
+					},
+					{
+						"name": "Category",
+						"type": "String"
+					},
+					{
+						"name": "Status",
+						"type": "String"
+					},
+					{
+						"name": "Error",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/allfiles_sourceDataSet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Name",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/auditDepartment_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "AuditDepartmentEmployees.csv",
+						"folderPath": "output",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmpId",
+						"type": "String"
+					},
+					{
+						"name": "EmpName",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					},
+					{
+						"name": "DepartmentId",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/blobStorage_lookupActivity')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage_lookupActivity",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"container": "exported-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage_lookupActivity')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataSet_forDeleteActivity')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "output",
+						"container": "adfdemo"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataset_forfilteration')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "employeeData.csv",
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmpId",
+						"type": "String"
+					},
+					{
+						"name": "EmpName",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					},
+					{
+						"name": "DepartmentId",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/departmentData_ForDataFlow')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "department.csv",
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "DepartmentId",
+						"type": "String"
+					},
+					{
+						"name": "DepartmentName",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/empData_ForDataFlow')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "employeeData.csv",
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmpId",
+						"type": "String"
+					},
+					{
+						"name": "EmpName",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					},
+					{
+						"name": "DepartmentId",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/empdataForDerived_DataSet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "employeeDataforDerived.csv",
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmpId",
+						"type": "String"
+					},
+					{
+						"name": "EmpName",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					},
+					{
+						"name": "DepartmentId",
+						"type": "String"
+					},
+					{
+						"name": "Country",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/employeeData_sinkDataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "employeeData.csv",
+						"folderPath": "output",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/employeeData_sourceDataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "employeeData.csv",
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Name",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/employeeDetails_sourceDataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "employeeDetails.csv",
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "name",
+						"type": "String"
+					},
+					{
+						"name": "salary",
+						"type": "String"
+					},
+					{
+						"name": "age",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/employees_forRemoveDuplication_DataSet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "Employees.csv",
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmpId",
+						"type": "String"
+					},
+					{
+						"name": "EmpName",
+						"type": "String"
+					},
+					{
+						"name": "Country",
+						"type": "String"
+					},
+					{
+						"name": "DepartmentId",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/inputDataSet_forGetMetaData')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Name",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Contact",
+						"type": "String"
+					},
+					{
+						"name": "Education",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/inputdataDataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "data.txt",
+						"folderPath": "input",
+						"container": "adfdemo"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/outPut_DataSet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "output",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/outputdataDataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "data.txt",
+						"folderPath": "output",
+						"container": "adfdemo"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/sourceDataSet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"container": "exported-data"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/unpivotedData_Dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedservice_AzureBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "unpivotedData.csv",
+						"folderPath": "input",
+						"container": "adfdemo"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "PO",
+						"type": "String"
+					},
+					{
+						"name": "Vendor",
+						"type": "String"
+					},
+					{
+						"name": "Apple",
+						"type": "String"
+					},
+					{
+						"name": "Mango",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedservice_AzureBlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedservice_AzureBlobStorage')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedservice_AzureBlobStorage_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedservice_AzureBlobStorage_lookupActivity')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedservice_AzureBlobStorage_lookupActivity_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedservice_AzureSqlDatabase_lookupActivity')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedservice_AzureSqlDatabase_lookupActivity_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedservice_dbparameterization')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"dbName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedservice_dbparameterization_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedservice_general_parametrization')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"serverName": {
+						"type": "string"
+					},
+					"dbName": {
+						"type": "string"
+					},
+					"userName": {
+						"type": "string"
+					},
+					"password": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedservice_general_parametrization_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/triggerforcopydatapipeline')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "copydata_pipeline",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 1,
+						"startTime": "2024-01-12T01:19:00",
+						"timeZone": "Pakistan Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/copydata_pipeline')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Aggregation')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "empData_ForDataFlow",
+								"type": "DatasetReference"
+							},
+							"name": "Employees"
+						},
+						{
+							"dataset": {
+								"referenceName": "departmentData_ForDataFlow",
+								"type": "DatasetReference"
+							},
+							"name": "Departments"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "CountEmployeesinDepartment"
+						}
+					],
+					"transformations": [
+						{
+							"name": "aggregate"
+						},
+						{
+							"name": "join1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Employees",
+						"source(output(",
+						"          DepartmentId as string,",
+						"          DepartmentName as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     partitionBy('hash', 1)) ~> Departments",
+						"Employees aggregate(groupBy(DepartmentId),",
+						"     TotalEmployees = count(EmpId)) ~> aggregate",
+						"aggregate, Departments join(aggregate@DepartmentId == Departments@DepartmentId,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     partitionBy('hash', 1),",
+						"     broadcast: 'auto')~> join1",
+						"join1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['EmployeesInDepartment.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          DepartmentName,",
+						"          TotalEmployees",
+						"     ),",
+						"     partitionBy('hash', 1)) ~> CountEmployeesinDepartment"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/empData_ForDataFlow')]",
+				"[concat(variables('factoryId'), '/datasets/departmentData_ForDataFlow')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ConditionalDataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "empData_ForDataFlow",
+								"type": "DatasetReference"
+							},
+							"name": "Employees"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "AuditDepartmentEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "FinanceDepartmentEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "MarketingDepartmentEmployees"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DepartmentBasedFiles"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Employees",
+						"Employees split(equals(DepartmentId, '1'),",
+						"     equals(DepartmentId, '2'),",
+						"     equals(DepartmentId, '3'),",
+						"     disjoint: false,",
+						"     partitionBy('hash', 1)) ~> DepartmentBasedFiles@(AuditDepartment, FinanceDepartment, MarketingDepartment, OtherDepartments)",
+						"DepartmentBasedFiles@AuditDepartment sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['AuditDepartmentEmployees.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> AuditDepartmentEmployees",
+						"DepartmentBasedFiles@FinanceDepartment sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['FinanceDepartmentEmployees.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> FinanceDepartmentEmployees",
+						"DepartmentBasedFiles@MarketingDepartment sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['MarketingDepartmentEmployees.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> MarketingDepartmentEmployees"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/empData_ForDataFlow')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DerivedColumnDataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ForderivedColumn_dataset",
+								"type": "DatasetReference"
+							},
+							"name": "Employees"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedColumn1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string,",
+						"          Country as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Employees",
+						"Employees derive(Country = upper(Country),",
+						"          CountryList = iif(isNull(Country), 'Unknown', upper(Country)),",
+						"     partitionBy('hash', 1)) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['derivedcolumns.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ForderivedColumn_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/EmpDepData')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "empData_ForDataFlow",
+								"type": "DatasetReference"
+							},
+							"name": "EmployeeData"
+						},
+						{
+							"dataset": {
+								"referenceName": "departmentData_ForDataFlow",
+								"type": "DatasetReference"
+							},
+							"name": "DepartmentData"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "sink"
+						}
+					],
+					"transformations": [
+						{
+							"name": "EmpDepData"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false) ~> EmployeeData",
+						"source(output(",
+						"          DepartmentId as string,",
+						"          DepartmentName as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false,",
+						"     partitionBy('hash', 1)) ~> DepartmentData",
+						"EmployeeData, DepartmentData join(EmployeeData@DepartmentId == DepartmentData@DepartmentId,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     partitionBy('hash', 1),",
+						"     broadcast: 'auto')~> EmpDepData",
+						"EmpDepData sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['EmpDepData.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1,",
+						"     partitionBy('hash', 1)) ~> sink"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/empData_ForDataFlow')]",
+				"[concat(variables('factoryId'), '/datasets/departmentData_ForDataFlow')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/FilterEmployee_DataFlow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "empData_ForDataFlow",
+								"type": "DatasetReference"
+							},
+							"name": "EmpData"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "Finance"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterEmpData"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: true,",
+						"     partitionBy('hash', 1)) ~> EmpData",
+						"EmpData filter(equals(DepartmentId, '2'),",
+						"     partitionBy('hash', 1)) ~> FilterEmpData",
+						"FilterEmpData sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['finance.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1,",
+						"     partitionBy('hash', 1)) ~> Finance"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/empData_ForDataFlow')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/duplicaterowremove_dataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "employees_forRemoveDuplication_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "Employees"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "DuplicationRowsRemoved"
+						}
+					],
+					"transformations": [
+						{
+							"name": "aggregate1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Country as string,",
+						"          DepartmentId as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Employees",
+						"Employees aggregate(groupBy(EmpId),",
+						"     each(match(name!='EmpId'), $$ = first($$))) ~> aggregate1",
+						"aggregate1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['removeduplicationdata.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> DuplicationRowsRemoved"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/employees_forRemoveDuplication_DataSet')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/existnotexist_dataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ForderivedColumn_dataset",
+								"type": "DatasetReference"
+							},
+							"name": "Employees"
+						},
+						{
+							"dataset": {
+								"referenceName": "departmentData_ForDataFlow",
+								"type": "DatasetReference"
+							},
+							"name": "Departments"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "DepartmetIdNotExist"
+						}
+					],
+					"transformations": [
+						{
+							"name": "NotExist"
+						},
+						{
+							"name": "derivedColumn1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string,",
+						"          Country as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Employees",
+						"source(output(",
+						"          DepartmentId as string,",
+						"          DepartmentName as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Departments",
+						"Employees, Departments exists(Employees@DepartmentId == Departments@DepartmentId,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> NotExist",
+						"NotExist derive(Country = iif(isNull(Country), 'Unknown', Country)) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['DepartmentsNotExist.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> DepartmetIdNotExist"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ForderivedColumn_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/departmentData_ForDataFlow')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/lookup_dataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "empdataForDerived_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "employees"
+						},
+						{
+							"dataset": {
+								"referenceName": "departmentData_ForDataFlow",
+								"type": "DatasetReference"
+							},
+							"name": "departments"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "lookupDestination"
+						}
+					],
+					"transformations": [
+						{
+							"name": "lookup1"
+						},
+						{
+							"name": "NameSorting"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string,",
+						"          Country as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> employees",
+						"source(output(",
+						"          DepartmentId as string,",
+						"          DepartmentName as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> departments",
+						"employees, departments lookup(employees@DepartmentId == departments@DepartmentId,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> lookup1",
+						"lookup1 sort(asc(EmpName, true),",
+						"     caseInsensitive: true) ~> NameSorting",
+						"NameSorting sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['lookupResult.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> lookupDestination"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/empdataForDerived_DataSet')]",
+				"[concat(variables('factoryId'), '/datasets/departmentData_ForDataFlow')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pivot_dataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "empData_ForDataFlow",
+								"type": "DatasetReference"
+							},
+							"name": "Employees"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "pivotedDataOnEducation"
+						}
+					],
+					"transformations": [
+						{
+							"name": "pivot1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Employees",
+						"Employees pivot(groupBy(DepartmentId),",
+						"     pivotBy(Education),",
+						"     {} = count(EmpId),",
+						"     columnNaming: '$N$V',",
+						"     lateral: true) ~> pivot1",
+						"pivot1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['pivotedDataOnEducationColumn.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> pivotedDataOnEducation"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/empData_ForDataFlow')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/union_dataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "auditDepartment_dataset",
+								"type": "DatasetReference"
+							},
+							"name": "AuditDepartmentEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "FinanceDepartment_dataset",
+								"type": "DatasetReference"
+							},
+							"name": "FinanceDepartmentEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "MarketingDepartment_dataset",
+								"type": "DatasetReference"
+							},
+							"name": "MarketingDepartmentEmployees"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "AllDepartmentsEmployeesData"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AllDepartmentEmployees"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> AuditDepartmentEmployees",
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> FinanceDepartmentEmployees",
+						"source(output(",
+						"          EmpId as string,",
+						"          EmpName as string,",
+						"          Gender as string,",
+						"          Contact as string,",
+						"          Education as string,",
+						"          DepartmentId as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> MarketingDepartmentEmployees",
+						"AuditDepartmentEmployees, FinanceDepartmentEmployees, MarketingDepartmentEmployees union(byName: true)~> AllDepartmentEmployees",
+						"AllDepartmentEmployees sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['alldepartmentEmployees.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> AllDepartmentsEmployeesData"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/auditDepartment_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/FinanceDepartment_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/MarketingDepartment_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/unpivotedtopivotedData_dataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "unpivotedData_Dataset",
+								"type": "DatasetReference"
+							},
+							"name": "unpivotedData"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "outPut_DataSet",
+								"type": "DatasetReference"
+							},
+							"name": "pivotedData"
+						}
+					],
+					"transformations": [
+						{
+							"name": "unpivot1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          PO as string,",
+						"          Vendor as string,",
+						"          Apple as string,",
+						"          Mango as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> unpivotedData",
+						"unpivotedData unpivot(output(",
+						"          Fruits as string,",
+						"          Amount as string",
+						"     ),",
+						"     ungroupBy(PO,",
+						"          Vendor),",
+						"     lateral: true,",
+						"     ignoreNullPivots: false) ~> unpivot1",
+						"unpivot1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['unpivotedtopivotedData.csv'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> pivotedData"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/unpivotedData_Dataset')]",
+				"[concat(variables('factoryId'), '/datasets/outPut_DataSet')]"
+			]
+		}
+	]
+}
