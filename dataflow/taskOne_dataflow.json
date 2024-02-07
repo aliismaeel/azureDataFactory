@@ -1,0 +1,82 @@
+{
+	"name": "taskOne_dataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "sourceDataSet_Employee",
+						"type": "DatasetReference"
+					},
+					"name": "employees"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_ASQL_DBUNITED",
+						"type": "DatasetReference"
+					},
+					"name": "sourcesex"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "lookup1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          status as string,",
+				"          title as string,",
+				"          {1st name} as string,",
+				"          surname as string,",
+				"          gender as string,",
+				"          {date of birth} as date,",
+				"          {address 1} as string,",
+				"          {flat no} as string,",
+				"          {building number} as short,",
+				"          {building name} as string,",
+				"          {new address 1} as string,",
+				"          {address 2} as string,",
+				"          {address 3} as string,",
+				"          {address 4} as string,",
+				"          postcode as string,",
+				"          email as string,",
+				"          phone as string,",
+				"          {NI number} as string,",
+				"          {alternative identifier} as string,",
+				"          {employment start date} as date,",
+				"          {pay frequency} as string,",
+				"          {enrolment date} as date,",
+				"          {enrolment type} as string,",
+				"          {enrolment letter issued} as string,",
+				"          {end of opt-out window} as string,",
+				"          {opt-out?} as string,",
+				"          {opt-out date} as string,",
+				"          {pensionable earnings} as string,",
+				"          {minimum total %} as short,",
+				"          {minimum employer %} as short,",
+				"          {ceased active membership?} as string,",
+				"          {CAM date} as string,",
+				"          {leaver?} as string,",
+				"          {date of leaving} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     partitionBy('hash', 1)) ~> employees",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table',",
+				"     partitionBy('hash', 1)) ~> sourcesex",
+				"employees, sourcesex lookup(gender == Sex,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     partitionBy('hash', 1),",
+				"     broadcast: 'auto')~> lookup1"
+			]
+		}
+	}
+}
